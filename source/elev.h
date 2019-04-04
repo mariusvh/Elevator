@@ -6,28 +6,11 @@
 #define __INCLUDE_DRIVER_H__
 
 
-
-//
-typedef struct Elevator{
-  elev_motor_direction_t dir;
-  elev_motor_direction_t prevDir;
-  int floor;
-  state_t state;
-  int queue[N_FLOORS][N_BUTTONS] = {};
-}Elevator;
-
+// Number of signals and lamps on a per-floor basis (excl sensor)
+#define N_BUTTONS 3
 
 // Number of floors
 #define N_FLOORS 4
-
-
-
-/**
-  Initialize elevator.
-  @return Non-zero on success, 0 on failure.
-*/
-int elev_init(void);
-
 
 
 /**
@@ -38,6 +21,14 @@ typedef enum tag_elev_motor_direction {
     DIRN_STOP = 0,
     DIRN_UP = 1
 } elev_motor_direction_t;
+
+
+
+/**
+  Initialize elevator.
+  @return Non-zero on success, 0 on failure.
+*/
+int elev_init(void);
 
 
 
@@ -128,6 +119,9 @@ int elev_get_button_signal(elev_button_type_t button, int floor);
   @param value Non-zero value turns lamp on, 0 turns lamp off.
 */
 void elev_set_button_lamp(elev_button_type_t button, int floor, int value);
+
+
+
 
 
 
