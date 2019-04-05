@@ -1,13 +1,16 @@
 #include "elev.h"
+#include "queue.h"
 #include "io.h"
 #include <stdio.h>
 
 
 void control_update_floor(elevator_t *e) {
-    if (elev_get_floor_sensor_signal() == -1) {
+    int tempFloor = elev_get_floor_sensor_signal();
+
+    if (tempFloor == -1) {
         return;
     }
-    e->floor = elev_get_floor_sensor_signal(); //vil dette lagres utenfor funksjonskallet??
+    e->floor = tempFloor;
     elev_set_floor_indicator(e->floor);
 }
 
@@ -18,4 +21,12 @@ void control_secure_range(){
     } else if (elev_get_floor_sensor_signal() == 0) {
         elev_set_motor_direction(DIRN_UP);
     }
+}
+
+
+
+void control_update_direction(elevator_t *e, elev_motor_direction_t dirn) {
+    e->prevDir = e->dir;
+    e->dir = dirn;
+    elev_set_motor_direction(dirn);
 }

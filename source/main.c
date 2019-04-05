@@ -1,6 +1,9 @@
 #include "elev.h"
 #include "queue.h"
 #include <stdio.h>
+#include "fsm.h"
+#include "control.h"
+#include "timer.h"
 
 
 
@@ -11,54 +14,114 @@ int main() {
         return 1;
     }
 
-    printf("Press STOP button to stop elevator and exit program.\n");
+    printf("Press 'OBSTRUCTION' button to stop elevator and exit program.\n");
+
 
     //Create Elevator e
     elevator_t el;
-    el.floor = -1;
-    el.dir = DIRN_STOP;
-    el.prevDir = DIRN_STOP;
-    el.state = IDLE;
-    //queue_reset_matrix(&el);
 
-    //Preparing e for start.
-    elev_defined_start(&el);
-    printf("%d\n", el.floor);
-    printf("%d\n", el.dir);
-    printf("%d\n", el.prevDir);
-    printf("%d\n", el.state);
+    //Preparing elevator el for start.
+    queue_elev_defined_start(&el);
+
 
 
 
     while (1) {
-        //Check range
-        if (elev_get_floor_sensor_signal() == N_FLOORS - 1) {
-            elev_set_motor_direction(DIRN_DOWN);
-        } else if (elev_get_floor_sensor_signal() == 0) {
-            elev_set_motor_direction(DIRN_UP);
-        }
 
+        control_update_floor(&el);
+        queue_update_button_lamps(&el);
+        //printf("prevDir: %d\n", el.prevDir);
 
-        // Stop elevator and exit program if the stop button is pressed
-        if (elev_get_stop_signal()) {
-            elev_set_motor_direction(DIRN_STOP);
+        // Stop elevator and exit program if 'CTRL + C' is pressed
+        if (elev_get_obstruction_signal()) {
             break;
         }
-        printf("69\n");
-
-        queue_update_matrix(&el);
 
 
-
-        /*switch (e.state) {
+        switch (el.state) {
           case IDLE:
+            queue_update_matrix(&el);
+
+
+            if (elev_get_stop_signal()) {
+                control_update_direction(&el, DIRN_STOP);
+                elev_set_stop_lamp(1);
+                el.state = STOP;
+                printf("State: %d\n", el.state);
+            }
+            if (queue_any_orders(&el) && !queue_stop_at_floor(&el)) {
+                control_update_direction(&el,queue_choose_direction(&el,elev_get_floor_sensor_signal()));
+                el.state = MOVE;
+                printf("State: %d\n", el.state);
+            }
+            if (queue_stop_at_floor(&el)) {
+                el.state = DOOR_OPEN;
+                queue_print_matix(&el);
+                printf("State: %d\n", el.state);
+            }
+            break;
 
           case MOVE:
+            control_secure_range();
+            queue_update_matrix(&el);
+
+            if (elev_get_stop_signal()) {
+                control_update_direction(&el, DIRN_STOP);//?
+                elev_set_stop_lamp(1);
+                el.state = STOP;
+                printf("State: %d\n", el.state);
+            }
+            if (queue_stop_at_floor(&el)) {
+                control_update_direction(&el, DIRN_STOP);
+                el.state = IDLE;
+                printf("State: %d\n", el.state);
+            }
+            break;
 
           case DOOR_OPEN:
+            queue_update_matrix(&el);
+            elev_set_door_open_lamp(1);
+
+
+            if (elev_get_stop_signal()) {
+                control_update_direction(&el, DIRN_STOP);
+                elev_set_stop_lamp(1);
+                el.state = STOP;
+                printf("State: %d\n", el.state);
+            }
+
+            if (el.time == 0) {
+                timer_start(&el);
+            }
+            if (timer_check(&el)) {
+                elev_set_door_open_lamp(0);
+                el.time = 0;
+                queue_delete_executed_orders(&el);
+                queue_print_matix(&el);
+                el.state = IDLE;
+                printf("State: %d\n", el.state);
+            }
+
+            break;
 
           case STOP:
-      }*/
+          if (!elev_get_stop_signal()) {
+              elev_set_stop_lamp(0);
+              if (elev_get_floor_sensor_signal() != -1 ) {
+                  el.time = 0;
+                  el.state = DOOR_OPEN;
+                  printf("State: %d\n", el.state);
+              }
+              else{
+                  el.state = IDLE;
+                  printf("State: %d\n", el.state);
+              }
+          }
+            //control_update_direction(&el, DIRN_STOP); //Bør den heller settes "på vei inn i" staten??
+            queue_reset_matrix(&el);
+            break;
+
+      }
     }
 
     return 0;
