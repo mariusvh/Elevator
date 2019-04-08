@@ -8,34 +8,32 @@
 
 
 /**
-  Tracks which floor the elevator is currently on.
-  @param e The elevator that is beeing tracked.
-*/
+ * @brief Tracks which floor the elevator e is currently on.
+ * @param[in,out] e The elevator that is beeing tracked.
+ */
 void control_update_floor(elevator_t *e);
 
 
+
 /**
-  Change direction when we reach top/bottom floor
-*/
+ * @brief Changes direction when elevator reach top/bottom floor.
+ */
 void control_secure_range();
 
 
-
-
 /**
-  Changes motor direction, updates e.dir and e.prevDir.
-  @param e The elevator.
-  @param dirn New motor/elevator direction.
-*/
+ * @brief Changes motor direction, updates e.dir and e.prevDir.
+ * @param[in, out] e The elevator.
+ * @param[in] dirn New motor/elevator direction.
+ */
 void control_update_direction(elevator_t *e, elev_motor_direction_t dirn);
 
 
-
-
-
-
-
-
+/**
+  Preparing elevator to start.Initializes elevator attributes.
+  @param e The elevator.
+*/
+void control_elev_defined_start(elevator_t *e) ;
 
 
 

@@ -1,7 +1,5 @@
-
 #include "queue.h"
 #include "elev.h"
-#include "io.h"
 #include <stdio.h>
 
 void queue_reset_matrix(elevator_t *e){
@@ -22,7 +20,7 @@ void queue_update_matrix(elevator_t *e){
       e->queue[j][BUTTON_CALL_DOWN] = e->queue[j][BUTTON_CALL_DOWN] || elev_get_button_signal(BUTTON_CALL_DOWN,j);
   }
   for (int k = 0; k < N_FLOORS; k++) {
-      e->queue[k][BUTTON_COMMAND] = e->queue[k][BUTTON_COMMAND] || elev_get_button_signal(BUTTON_COMMAND,k); // j is elev_button_type   BUTTON_CALL_UP = 0, BUTTON_CALL_DOWN = 1, BUTTON_COMMAND = 2
+      e->queue[k][BUTTON_COMMAND] = e->queue[k][BUTTON_COMMAND] || elev_get_button_signal(BUTTON_COMMAND,k);
   }
   e->queue[0][1] = -1;
   e->queue[N_FLOORS-1][0] = -1;
@@ -74,52 +72,7 @@ void queue_delete_executed_orders(elevator_t *e){
   e->queue[N_FLOORS-1][0] = -1;
 }
 
-elev_motor_direction_t queue_choose_direction(elevator_t *e, int value){
-    if (value == -1) {
-        return queue_floor_inbetween(e);
-      }
-  switch (e->prevDir) {
-    case DIRN_UP:
-      if (queue_orders_above(e)) {
-          return DIRN_UP;
-     }
-      if (queue_orders_under(e)) {
-          return DIRN_DOWN;
-      }
-      printf("case DIRN_UP\n");
-      return DIRN_STOP;
 
-    case DIRN_DOWN:
-      if (queue_orders_under(e)) {
-          return DIRN_DOWN;
-      }
-      if (queue_orders_above(e)) {
-          return DIRN_UP;
-      }
-      printf("case DIRN_DOWN: \n");
-
-      return DIRN_STOP;
-
-
-    case DIRN_STOP:
-    if (elev_get_floor_sensor_signal() == -1) {
-        printf("1111\n");
-        //return DIRN_DOWN;
-    }
-
-      if (queue_orders_under(e)) {
-          return DIRN_DOWN;
-      }
-      if (queue_orders_above(e)) {
-          return DIRN_UP;
-      }
-      return DIRN_STOP;
-
-    default:
-      return DIRN_STOP;
-  }
-
-}
 
 int queue_stop_at_floor(elevator_t *e) {
   switch (e->dir) {
@@ -159,30 +112,44 @@ int queue_stop_at_floor(elevator_t *e) {
 }
 
 
-void queue_elev_defined_start(elevator_t *e) {
-    e->floor = elev_get_floor_sensor_signal();
-    if (e->floor != -1) {
-        elev_set_floor_indicator(e->floor);
-        e->dir = DIRN_STOP;
-        e->prevDir = DIRN_STOP;
-        e->state = IDLE;
-        e->time = 0;
-        queue_reset_matrix(e);
-    }
-    else {
-        elev_set_motor_direction(DIRN_DOWN);
-        while (elev_get_floor_sensor_signal() == -1) {
-        }
-        elev_set_motor_direction(DIRN_STOP);
-        e->floor = elev_get_floor_sensor_signal();
-        elev_set_floor_indicator(e->floor);
-        e->dir = DIRN_STOP;
-        e->prevDir = DIRN_STOP;
-        e->state = IDLE;
-        e->time = 0;
-        queue_reset_matrix(e);
-    }
+elev_motor_direction_t queue_choose_direction(elevator_t *e, int value){
+    if (value == -1) {
+        return queue_floor_inbetween(e);
+      }
+  switch (e->prevDir) {
+    case DIRN_UP:
+      if (queue_orders_above(e)) {
+          return DIRN_UP;
+     }
+      if (queue_orders_under(e)) {
+          return DIRN_DOWN;
+      }
+      return DIRN_STOP;
+
+    case DIRN_DOWN:
+      if (queue_orders_under(e)) {
+          return DIRN_DOWN;
+      }
+      if (queue_orders_above(e)) {
+          return DIRN_UP;
+      }
+      return DIRN_STOP;
+
+    case DIRN_STOP:
+      if (queue_orders_under(e)) {
+          return DIRN_DOWN;
+      }
+      if (queue_orders_above(e)) {
+          return DIRN_UP;
+      }
+      return DIRN_STOP;
+
+    default:
+      return DIRN_STOP;
+  }
+
 }
+
 
 void queue_print_matix(elevator_t *e){
     for (int i = 0; i < N_FLOORS; i++) {

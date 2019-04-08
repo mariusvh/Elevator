@@ -1,10 +1,8 @@
 #include "elev.h"
 #include "queue.h"
-#include <stdio.h>
-#include "fsm.h"
 #include "control.h"
 #include "timer.h"
-
+#include <stdio.h>
 
 
 int main() {
@@ -16,21 +14,16 @@ int main() {
 
     printf("Press 'OBSTRUCTION' button to stop elevator and exit program.\n");
 
-
     //Create Elevator e
     elevator_t el;
 
     //Preparing elevator el for start.
-    queue_elev_defined_start(&el);
-
-
-
+    control_elev_defined_start(&el);
 
     while (1) {
 
         control_update_floor(&el);
         queue_update_button_lamps(&el);
-        //printf("prevDir: %d\n", el.prevDir);
 
         // Stop elevator and exit program if 'CTRL + C' is pressed
         if (elev_get_obstruction_signal()) {
@@ -46,6 +39,9 @@ int main() {
             if (elev_get_stop_signal()) {
                 control_update_direction(&el, DIRN_STOP);
                 elev_set_stop_lamp(1);
+                if (elev_get_floor_sensor_signal() != -1) {
+                    elev_set_door_open_lamp(1);
+                }
                 el.state = STOP;
                 printf("State: %d\n", el.state);
             }
@@ -64,7 +60,6 @@ int main() {
           case MOVE:
             control_secure_range();
             queue_update_matrix(&el);
-
             if (elev_get_stop_signal()) {
                 control_update_direction(&el, DIRN_STOP);//?
                 elev_set_stop_lamp(1);
@@ -117,7 +112,6 @@ int main() {
                   printf("State: %d\n", el.state);
               }
           }
-            //control_update_direction(&el, DIRN_STOP); //Bør den heller settes "på vei inn i" staten??
             queue_reset_matrix(&el);
             break;
 
