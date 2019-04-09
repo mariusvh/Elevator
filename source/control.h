@@ -16,15 +16,15 @@ void control_update_floor(elevator_t *e);
 
 
 /**
- * @brief Changes direction when elevator reach top/bottom floor.
+ * @brief Changes motor direction of the elevator when it reaches the top/bottom floor.
  */
 void control_secure_range();
 
 
 /**
- * @brief Changes motor direction, updates e.dir and e.prevDir.
+ * @brief Changes motor direction of the elevator, updates the elevators new direction, e.dir, and its previous direction e.prevDir.
  * @param[in, out] e The elevator.
- * @param[in] dirn New motor/elevator direction.
+ * @param[in] dirn The elevators new motor direction.
  */
 void control_update_direction(elevator_t *e, elev_motor_direction_t dirn);
 
